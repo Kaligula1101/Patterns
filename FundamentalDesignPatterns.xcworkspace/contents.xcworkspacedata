@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:IntermediateDesignPatterns.playground">
+   </FileRef>
+   <FileRef
       location = "group:FundamentalDesignPatterns.xcworkspace/FundamentalDesignPatterns.playground">
    </FileRef>
 </Workspace>
