@@ -17,3 +17,94 @@
  
  ## Code Example
  */
+import UIKit
+
+// MARK: - Legacy Object
+public  class GoogleAuthenticator {
+    public func login(email: String, password: String, completion: @escaping (GoogleUser?, Error?) -> Void) {
+        // Make networking calls that return a token string
+        let token = "special-token-value"
+        
+        let user = GoogleUser(email: email, password: password, token: token)
+        completion(user, nil)
+    }
+}
+
+public struct GoogleUser {
+    public var email: String
+    public var password: String
+    public var token: String
+}
+
+// MARK: - New Protocol
+public protocol AuthenticationService {
+    func login(email: String, password: String, success: @escaping (User, Token) -> Void, failure: @escaping (Error?) -> Void)
+}
+
+public struct User {
+    public let email: String
+    public let password: String
+}
+
+public struct Token {
+    public let value: String
+}
+
+// MARK: - Adapter
+public class GoogleAuthenticatorAdapter: AuthenticationService {
+    
+    private var authenticator = GoogleAuthenticator()
+    
+    public func login(email: String, password: String, success: @escaping (User, Token) -> Void, failure: @escaping (Error?) -> Void) {
+        authenticator.login(email: email, password: password) { (googleUser, error) in
+            guard let googleUser = googleUser else {
+                failure(error)
+                return
+            }
+            
+            let user = User(email: googleUser.email, password: googleUser.password)
+            
+            let token = Token(value: googleUser.token)
+            success(user, token)
+        }
+    }
+}
+
+// MARK: - Object Using an Adapter
+public class LoginViewController: UIViewController {
+    
+    // MARK: - Properties
+    public var authService: AuthenticationService!
+    
+    // MARK: - Views
+    var emailTextField = UITextField()
+    var passwordTextField = UITextField()
+    
+    // MARK: - Class Constructors
+    public class func instance(with authService: AuthenticationService) -> LoginViewController {
+        let viewController = LoginViewController()
+        viewController.authService = authService
+        return viewController
+    }
+    
+    public func login() {
+        guard let email = emailTextField.text,
+              let password = passwordTextField.text else {
+                  print("Email and password are required inputs!")
+                  return
+              }
+        authService.login(email: email, password: password,
+                          success: { user, token in
+            print("Auth succeeded: \(user.email), \(token.value)")
+        },
+                          failure: { error in
+            print("Auth failed with error: no error provided")
+        })
+    }
+}
+
+// MARK: - Example
+let viewController = LoginViewController.instance(with: GoogleAuthenticatorAdapter())
+viewController.emailTextField.text = "user@example.com"
+viewController.passwordTextField.text = "password"
+viewController.login()
