@@ -93,7 +93,7 @@ public class TrafficLight: UIView {
 }
 
 // MARK: - State Protocol
-public protocol TrafficLightState: class {
+public protocol TrafficLightState: AnyObject {
     
     // MARK: - Properties
     var delay: TimeInterval { get }
